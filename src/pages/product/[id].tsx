@@ -22,7 +22,7 @@ export class Product {
   price?: number
 }
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context: any) {
   const { id } = context.query
   const res = await (await fetch(`https://pokeapi.co/api/v2/item/${id}/`)).json()
 
