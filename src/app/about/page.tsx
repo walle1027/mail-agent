@@ -6,5 +6,5 @@ export default function Home() {
         <p className="mt-4">This is the home page of my Next.js application.</p>
       </main>
     </div>
-  );
+  )
 }
