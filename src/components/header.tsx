@@ -1,38 +1,27 @@
-'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import React from 'react'
+import ThemeSwitch from './ThemeSwitch'
 
 export default function Header() {
-  const pathanme = usePathname()
-  const headers = [
-    {
-      title: 'Home',
-      link: '/',
-    },
-    {
-      title: 'About',
-      link: '/about',
-    },
-    {
-      title: 'Contact',
-      link: '/contact',
-    },
-  ]
   return (
-    <header className=" text-white p-4  ">
-      <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold">My Application</h1>
-        <nav>
-          <ul className="flex space-x-4">
-            {headers.map((header) => (
-              <li key={header.title}>
-                <Link href={header.link} className={pathanme == header.link ? ' text-cyan-900 ' : ' hover:underline'}>
-                  {header.title}
-                </Link>
-              </li>
-            ))}
+    <header className="bg-white dark:bg-black shadow-sm dark:border-b dark:border-gray-800 sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="flex items-center">
+          <span className="text-xl dark:text-gray-100">Next JS Starter Template</span>
+        </div>
+        <nav className="flex items-center">
+          <ul className="flex space-x-2 mr-2">
+            <li>
+              <Link href="/" className="text-sm text-gray-800 dark:text-white px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" className="text-sm text-gray-800 dark:text-white px-4 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                Contact
+              </Link>
+            </li>
           </ul>
+          <ThemeSwitch />
         </nav>
       </div>
     </header>
