@@ -1,70 +1,138 @@
-// 'use client'
-// import { FunctionComponent } from 'react'
-// import { useState } from 'react'
-// import { useChat, type UseChatOptions } from '@ai-sdk/react'
+'use client'
 
-// import { cn } from '@/lib/utils'
-// import { transcribeAudio } from '@/lib/utils/audio'
-// import { Chat } from '@/components/ui/chat'
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation'
+import { Message, MessageContent } from '@/components/ai-elements/message'
+import {
+  PromptInput,
+  PromptInputButton,
+  PromptInputModelSelect,
+  PromptInputModelSelectContent,
+  PromptInputModelSelectItem,
+  PromptInputModelSelectTrigger,
+  PromptInputModelSelectValue,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputToolbar,
+  PromptInputTools,
+} from '@/components/ai-elements/prompt-input'
+import { useState } from 'react'
+import { useChat } from '@ai-sdk/react'
+import { Response } from '@/components/ai-elements/response'
+import { GlobeIcon } from 'lucide-react'
+// import { Source, Sources, SourcesContent, SourcesTrigger } from '@/components/ai-elements/source'
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning'
+import { Loader } from '@/components/ai-elements/loader'
 
-// const MODELS = [
-//   { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
-//   { id: 'deepseek-r1-distill-llama-70b', name: 'Deepseek R1 70B' },
-// ]
-// interface ChatPageProps {
-//   initialMessages?: UseChatOptions['initialMessages']
-//   input?: ''
-// }
+const models = [
+  {
+    name: 'GPT 4o',
+    value: 'openai/gpt-4o',
+  },
+  {
+    name: 'Deepseek R1',
+    value: 'deepseek/deepseek-r1',
+  },
+]
 
-// const ChatPage: FunctionComponent<ChatPageProps> = (props: ChatPageProps) => {
-//   const [selectedModel, setSelectedModel] = useState(MODELS[0].id)
-//   const { messages, input, handleInputChange, handleSubmit, append, stop, status, setMessages } = useChat({
-//     ...props,
-//     api: '/api/chat',
-//     body: {
-//       model: selectedModel,
-//     },
-//   })
+const ChatPage = () => {
+  const [input, setInput] = useState('')
+  const [model, setModel] = useState<string>(models[0].value)
+  const [webSearch, setWebSearch] = useState(false)
+  const { messages, sendMessage, status } = useChat()
 
-//   const isLoading = status === 'submitted' || status === 'streaming'
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (input.trim()) {
+      sendMessage(
+        { text: input },
+        {
+          body: {
+            model: model,
+            webSearch: webSearch,
+          },
+        },
+      )
+      setInput('')
+    }
+  }
 
-//   return (
-//     <div className={cn('flex', 'flex-col', 'h-[500px]', 'w-full')}>
-//       <div className={cn('flex', 'justify-end', 'mb-2')}>
-//         <Select value={selectedModel} onValueChange={setSelectedModel}>
-//           <SelectTrigger className="w-[180px]">
-//             <SelectValue placeholder="Select Model" />
-//           </SelectTrigger>
-//           <SelectContent>
-//             {MODELS.map((model) => (
-//               <SelectItem key={model.id} value={model.id}>
-//                 {model.name}
-//               </SelectItem>
-//             ))}
-//           </SelectContent>
-//         </Select>
-//       </div>
+  return (
+    <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
+      <div className="flex flex-col h-full">
+        <Conversation className="h-full">
+          <ConversationContent>
+            {messages.map((message) => (
+              <div key={message.id}>
+                {/* {message.role === 'assistant' && (
+                  <Sources>
+                    <SourcesTrigger count={message.parts.filter((part) => part.type === 'source-url').length} />
+                    {message.parts
+                      .filter((part) => part.type === 'source-url')
+                      .map((part, i) => (
+                        <SourcesContent key={`${message.id}-${i}`}>
+                          <Source key={`${message.id}-${i}`} href={part.url} title={part.url} />
+                        </SourcesContent>
+                      ))}
+                  </Sources>
+                )} */}
+                <Message from={message.role} key={message.id}>
+                  <MessageContent>
+                    {message.parts.map((part, i) => {
+                      switch (part.type) {
+                        case 'text':
+                          return <Response key={`${message.id}-${i}`}>{part.text}</Response>
+                        case 'reasoning':
+                          return (
+                            <Reasoning key={`${message.id}-${i}`} className="w-full" isStreaming={status === 'streaming'}>
+                              <ReasoningTrigger />
+                              <ReasoningContent>{part.text}</ReasoningContent>
+                            </Reasoning>
+                          )
+                        default:
+                          return null
+                      }
+                    })}
+                  </MessageContent>
+                </Message>
+              </div>
+            ))}
+            {status === 'submitted' && <Loader />}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
 
-//       <Chat
-//         className="grow"
-//         messages={messages}
-//         handleSubmit={handleSubmit}
-//         input={input}
-//         handleInputChange={handleInputChange}
-//         isGenerating={isLoading}
-//         stop={stop}
-//         append={append}
-//         setMessages={setMessages}
-//         transcribeAudio={transcribeAudio}
-//         suggestions={[
-//           'What is the weather in San Francisco?',
-//           'Explain step-by-step how to solve this math problem: If x² + 6x + 9 = 25, what is x?',
-//           'Design a simple algorithm to find the longest palindrome in a string.',
-//         ]}
-//       />
-//     </div>
-//   )
-// }
+        <PromptInput onSubmit={handleSubmit} className="mt-4">
+          <PromptInputTextarea onChange={(e) => setInput(e.target.value)} value={input} />
+          <PromptInputToolbar>
+            <PromptInputTools>
+              <PromptInputButton variant={webSearch ? 'default' : 'ghost'} onClick={() => setWebSearch(!webSearch)}>
+                <GlobeIcon size={16} />
+                <span>Search</span>
+              </PromptInputButton>
+              <PromptInputModelSelect
+                onValueChange={(value) => {
+                  setModel(value)
+                }}
+                value={model}
+              >
+                <PromptInputModelSelectTrigger>
+                  <PromptInputModelSelectValue />
+                </PromptInputModelSelectTrigger>
+                <PromptInputModelSelectContent>
+                  {models.map((model) => (
+                    <PromptInputModelSelectItem key={model.value} value={model.value}>
+                      {model.name}
+                    </PromptInputModelSelectItem>
+                  ))}
+                </PromptInputModelSelectContent>
+              </PromptInputModelSelect>
+            </PromptInputTools>
+            <PromptInputSubmit disabled={!input} status={status} />
+          </PromptInputToolbar>
+        </PromptInput>
+      </div>
+    </div>
+  )
+}
 
-// export default ChatPage
+export default ChatPage
